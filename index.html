@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Action Items - Healthcare Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+
+        .widget-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .widget-header {
+            background: linear-gradient(135deg, #003A96 0%, #0052CC 100%);
+            color: white;
+            padding: 24px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .widget-title {
+            font-size: 24px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .total-badge {
+            background: rgba(177, 228, 227, 0.3);
+            color: #B1E4E3;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #B1E4E3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #003A96;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .user-title {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Metrics Bar */
+        .metrics-bar {
+            display: flex;
+            gap: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .metric-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-overdue .metric-value { color: #FF6B6B; }
+        .metric-today .metric-value { color: #FFD93D; }
+        .metric-completed .metric-value { color: #B1E4E3; }
+
+        /* Task Sections */
+        .task-sections {
+            padding: 24px;
+        }
+
+        .task-section {
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section-header:hover .section-title {
+            color: #003A96;
+        }
+
+        .section-icon {
+            font-size: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #2c3e50;
+            transition: color 0.2s;
+        }
+
+        .section-count {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .section-urgent .section-count { background: #ffe5e5; color: #dc3545; }
+        .section-week .section-count { background: #fff8e1; color: #f59e0b; }
+        .section-upcoming .section-count { background: #e8f5f4; color: #003A96; }
+
+        .collapse-icon {
+            margin-left: auto;
+            transition: transform 0.3s;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .section-header.collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(to right, #dee2e6, transparent);
+            margin-bottom: 16px;
+        }
+
+        /* Task Items */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: max-height 0.3s ease-out, opacity 0.3s;
+            max-height: 9999px; /* Large default value */
+            opacity: 1;
+        }
+
+        .task-list.collapsed {
+            max-height: 0 !important;
+            opacity: 0;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #dee2e6;
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            background: #e9ecef;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+            background: #f1f3f5;
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+        }
+
+        .task-urgent { border-left-color: #dc3545; }
+        .task-week { border-left-color: #f59e0b; }
+        .task-upcoming { border-left-color: #003A96; }
+
+        .task-checkbox {
+            margin-top: 2px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #003A96;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .task-icon {
+            font-size: 16px;
+            margin-top: 2px;
+        }
+
+        .task-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+
+        .task-due {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .task-source {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: white;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .task-link {
+            color: #003A96;
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+
+        .task-link:hover {
+            color: #0052CC;
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .widget-header {
+                padding: 16px;
+            }
+
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .metrics-bar {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .metric-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: left;
+            }
+
+            .metric-value {
+                margin-bottom: 0;
+            }
+
+            .task-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .task-sections {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <!-- Header -->
+        <div class="widget-header">
+            <div class="header-top">
+                <div class="widget-title">
+                    🎯 My Action Items
+                    <span class="total-badge" id="totalBadge">0</span>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar">SC</div>
+                    <div>
+                        <div class="user-name">Dr. Sarah Chen</div>
+                        <div class="user-title">Chief of Cardiology</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Bar -->
+            <div class="metrics-bar">
+                <div class="metric-item metric-overdue">
+                    <span class="metric-value" id="overdueCount">0</span>
+                    <span class="metric-label">Overdue</span>
+                </div>
+                <div class="metric-item metric-today">
+                    <span class="metric-value" id="todayCount">0</span>
+                    <span class="metric-label">Due Today</span>
+                </div>
+                <div class="metric-item metric-completed">
+                    <span class="metric-value" id="completedCount">0</span>
+                    <span class="metric-label">Completed</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Sections -->
+        <div class="task-sections" id="taskSections">
+            <!-- Sections will be dynamically generated -->
+        </div>
+    </div>
+
+    <script>
+        // Embedded Data - Simulating MuleSoft → Salesforce API Response
+        const employeeTasksData = {
+            employee: {
+                id: "005xx000001abcd",
+                name: "Dr. Sarah Chen",
+                email: "sarah.chen@healthcare.org",
+                title: "Chief of Cardiology",
+                department: "Cardiology"
+            },
+            tasks: [
+                {
+                    id: "t1",
+                    external_task_id: "DOCUSIGN-ENV-12345",
+                    title: "Sign Updated Credentialing Documents",
+                    description: "Annual credentialing renewal requires your signature",
+                    type: "signature",
+                    source: "DocuSign",
+                    dueDate: new Date(Date.now() - 86400000), // Yesterday (overdue)
+                    priority: "urgent",
+                    deepLink: "https://docusign.example.com/doc/12345",
+                    icon: "✍️",
+                    completed: false,
+                    metadata: {
+                        envelope_id: "ENV-12345",
+                        document_name: "Credentialing-2025-DrChen.pdf"
+                    }
+                },
+                {
+                    id: "t2",
+                    external_task_id: "LMS-HIPAA-2025-SC",
+                    title: "Complete HIPAA Annual Recertification Training",
+                    description: "Mandatory compliance training - 45 minutes",
+                    type: "training",
+                    source: "LMS",
+                    dueDate: new Date(Date.now()), // Today
+                    priority: "urgent",
+                    deepLink: "https://lms.example.com/course/hipaa-2025",
+                    icon: "📚",
+                    completed: false,
+                    metadata: {
+                        course_id: "HIPAA-2025",
+                        duration_minutes: 45,
+                        cme_credits: 0
+                    }
+                },
+                {
+                    id: "t3",
+                    external_task_id: "CONCUR-EXP-89012",
+                    title: "Approve CME Conference Expense - Cardiology Summit ($1,247)",
+                    description: "Dr. Martinez attending AHA Scientific Sessions 2025",
+                    type: "approval",
+                    source: "Concur",
+                    dueDate: new Date(Date.now() + 86400000), // Tomorrow
+                    priority: "week",
+                    deepLink: "https://concur.example.com/expense/89012",
+                    icon: "💰",
+                    completed: false,
+                    metadata: {
+                        report_id: "EXP-89012",
+                        submitter: "Dr. Lisa Martinez",
+                        amount: 1247.50
+                    }
+                },
+                {
+                    id: "t4",
+                    external_task_id: "ARIBA-REQ-45678",
+                    title: "Review Medical Equipment Purchase Order - Cardiac Ultrasound Machine",
+                    description: "GE Vivid E95 ultrasound system for echo lab",
+                    type: "approval",
+                    source: "Ariba",
+                    dueDate: new Date(Date.now() + 172800000), // 2 days
+                    priority: "week",
+                    deepLink: "https://ariba.example.com/req/45678",
+                    icon: "🛒",
+                    completed: false,
+                    metadata: {
+                        requisition_id: "REQ-45678",
+                        vendor: "GE Healthcare",
+                        amount: 125000.00
+                    }
+                },
+                {
+                    id: "t5",
+                    external_task_id: "WORKIVA-Q1-2025-PSQ",
+                    title: "Submit Patient Safety Quality Metrics for Q1",
+                    description: "CMS MIPS Quality Reporting deadline - Cardiology measures",
+                    type: "compliance",
+                    source: "Workiva",
+                    dueDate: new Date(Date.now() + 259200000), // 3 days
+                    priority: "week",
+                    deepLink: "https://workiva.example.com/report/q1-2025",
+                    icon: "📊",
+                    completed: false,
+                    metadata: {
+                        report_type: "MIPS_Quality",
+                        measures_count: 6
+                    }
+                },
+                {
+                    id: "t6",
+                    external_task_id: "FIELDGLASS-CNT-78901",
+                    title: "Approve Locum Cardiologist Contract Extension - Dr. Patel",
+                    description: "3-month extension for interventional cardiology coverage",
+                    type: "approval",
+                    source: "Fieldglass",
+                    dueDate: new Date(Date.now() + 259200000), // 3 days
+                    priority: "week",
+                    deepLink: "https://fieldglass.example.com/contract/78901",
+                    icon: "⏱️",
+                    completed: false,
+                    metadata: {
+                        worker_name: "Dr. Ravi Patel",
+                        specialty: "Interventional Cardiology",
+                        daily_rate: 2500.00
+                    }
+                },
+                {
+                    id: "t7",
+                    external_task_id: "SNOW-INC-3847",
+                    title: "Review IT Ticket: EPIC Cath Lab Module Access Issue",
+                    description: "Cardiologists unable to access procedure documentation",
+                    type: "incident",
+                    source: "ServiceNow",
+                    dueDate: new Date(Date.now() + 345600000), // 4 days
+                    priority: "week",
+                    deepLink: "https://servicenow.example.com/ticket/INC3847",
+                    icon: "🎫",
+                    completed: false,
+                    metadata: {
+                        incident_number: "INC3847",
+                        priority: "P2",
+                        affected_users: 8
+                    }
+                },
+                {
+                    id: "t8",
+                    external_task_id: "LMS-ACLS-2025-SC",
+                    title: "Complete ACLS Recertification Course",
+                    description: "Advanced Cardiac Life Support - expires 3/1/25",
+                    type: "training",
+                    source: "LMS",
+                    dueDate: new Date(Date.now() + 518400000), // 6 days
+                    priority: "upcoming",
+                    deepLink: "https://lms.example.com/course/acls-recert",
+                    icon: "📚",
+                    completed: false,
+                    metadata: {
+                        course_id: "ACLS-RECERT-2025",
+                        duration_minutes: 240,
+                        expiration_date: "2025-03-01"
+                    }
+                },
+                {
+                    id: "t9",
+                    external_task_id: "DOCUSIGN-ENV-56789",
+                    title: "Sign Heart Failure Clinic Partnership Agreement",
+                    description: "Regional collaboration with University Medical Center",
+                    type: "signature",
+                    source: "DocuSign",
+                    dueDate: new Date(Date.now() + 604800000), // 7 days
+                    priority: "upcoming",
+                    deepLink: "https://docusign.example.com/doc/56789",
+                    icon: "✍️",
+                    completed: false,
+                    metadata: {
+                        envelope_id: "ENV-56789",
+                        document_name: "HF-Clinic-Partnership-2025.pdf"
+                    }
+                },
+                {
+                    id: "t10",
+                    external_task_id: "CONCUR-EXP-67890",
+                    title: "Approve Department Travel Expense - Echo Technician Training",
+                    description: "3D echo certification course - Seattle ($892)",
+                    type: "approval",
+                    source: "Concur",
+                    dueDate: new Date(Date.now() + 691200000), // 8 days
+                    priority: "upcoming",
+                    deepLink: "https://concur.example.com/expense/67890",
+                    icon: "💰",
+                    completed: false,
+                    metadata: {
+                        report_id: "EXP-67890",
+                        submitter: "Maria Gonzales, CVT",
+                        amount: 892.00
+                    }
+                },
+                {
+                    id: "t11",
+                    external_task_id: "ARIBA-REQ-34567",
+                    title: "Approve Pharmaceutical Supply Order - Cardiac Medications",
+                    description: "Quarterly replenishment: Beta-blockers, ACE inhibitors",
+                    type: "approval",
+                    source: "Ariba",
+                    dueDate: new Date(Date.now() + 777600000), // 9 days
+                    priority: "upcoming",
+                    deepLink: "https://ariba.example.com/req/34567",
+                    icon: "🛒",
+                    completed: false,
+                    metadata: {
+                        requisition_id: "REQ-34567",
+                        vendor: "Cardinal Health",
+                        amount: 45000.00
+                    }
+                },
+                {
+                    id: "t12",
+                    external_task_id: "WORKIVA-ACC-CERT-2025",
+                    title: "Submit ACC Quality Certification Documentation",
+                    description: "American College of Cardiology accreditation renewal",
+                    type: "compliance",
+                    source: "Workiva",
+                    dueDate: new Date(Date.now() + 1209600000), // 14 days
+                    priority: "upcoming",
+                    deepLink: "https://workiva.example.com/acc/cert-2025",
+                    icon: "📊",
+                    completed: false,
+                    metadata: {
+                        accreditation_type: "ACC-Chest-Pain-Center",
+                        submission_deadline: "2025-02-22"
+                    }
+                }
+            ],
+            sync_metadata: {
+                last_sync: "2025-02-08T06:15:00Z",
+                batch_id: "BATCH-20250208-001",
+                sync_duration_seconds: 47
+            }
+        };
+
+        // State Management
+        let completedTasks = new Set();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Widget loaded');
+            console.log('Total tasks:', employeeTasksData.tasks.length);
+            loadTasks();
+        });
+
+        // Load and render tasks
+        function loadTasks() {
+            renderTasks(employeeTasksData.tasks);
+            updateMetrics(employeeTasksData.tasks);
+        }
+
+        // Render tasks
+        function renderTasks(tasks) {
+            console.log('Rendering tasks:', tasks.length);
+            
+            const sections = {
+                urgent: tasks.filter(t => t.priority === 'urgent' && !completedTasks.has(t.id)),
+                week: tasks.filter(t => t.priority === 'week' && !completedTasks.has(t.id)),
+                upcoming: tasks.filter(t => t.priority === 'upcoming' && !completedTasks.has(t.id))
+            };
+
+            console.log('Urgent tasks:', sections.urgent.length);
+            console.log('Week tasks:', sections.week.length);
+            console.log('Upcoming tasks:', sections.upcoming.length);
+
+            const sectionsContainer = document.getElementById('taskSections');
+            sectionsContainer.innerHTML = '';
+
+            // Urgent Section
+            if (sections.urgent.length > 0) {
+                sectionsContainer.appendChild(createSection(
+                    'urgent',
+                    '🔴',
+                    'URGENT',
+                    sections.urgent,
+                    'Due today or overdue'
+                ));
+            }
+
+            // This Week Section
+            if (sections.week.length > 0) {
+                sectionsContainer.appendChild(createSection(
+                    'week',
+                    '🟡',
+                    'THIS WEEK',
+                    sections.week,
+                    'Due in the next 7 days'
+                ));
+            }
+
+            // Upcoming Section
+            if (sections.upcoming.length > 0) {
+                sectionsContainer.appendChild(createSection(
+                    'upcoming',
+                    '🟢',
+                    'UPCOMING',
+                    sections.upcoming,
+                    'Due later this month'
+                ));
+            }
+
+            // Empty state
+            if (sections.urgent.length === 0 && sections.week.length === 0 && sections.upcoming.length === 0) {
+                sectionsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✅</div>
+                        <div class="empty-state-text">All caught up! No pending tasks.</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Create section
+        function createSection(priority, icon, title, tasks, subtitle) {
+            const section = document.createElement('div');
+            section.className = 'task-section';
+
+            const sectionHeader = document.createElement('div');
+            sectionHeader.className = `section-header section-${priority}`;
+            sectionHeader.innerHTML = `
+                <span class="section-icon">${icon}</span>
+                <span class="section-title">${title}</span>
+                <span class="section-count">${tasks.length}</span>
+                <span class="collapse-icon">▼</span>
+            `;
+
+            const divider = document.createElement('div');
+            divider.className = 'section-divider';
+
+            const taskList = document.createElement('div');
+            taskList.className = 'task-list';
+
+            tasks.forEach(task => {
+                taskList.appendChild(createTaskItem(task, priority));
+            });
+
+            // Set max-height after adding all items
+            setTimeout(() => {
+                taskList.style.maxHeight = taskList.scrollHeight + 'px';
+            }, 0);
+
+            // Collapse functionality
+            sectionHeader.addEventListener('click', function() {
+                sectionHeader.classList.toggle('collapsed');
+                taskList.classList.toggle('collapsed');
+            });
+
+            section.appendChild(sectionHeader);
+            section.appendChild(divider);
+            section.appendChild(taskList);
+
+            return section;
+        }
+
+        // Create task item
+        function createTaskItem(task, priority) {
+            const item = document.createElement('div');
+            item.className = `task-item task-${priority}`;
+            if (completedTasks.has(task.id)) {
+                item.classList.add('completed');
+            }
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'task-checkbox';
+            checkbox.checked = completedTasks.has(task.id);
+            checkbox.addEventListener('change', function() {
+                handleTaskComplete(task.id, this.checked);
+            });
+
+            const content = document.createElement('div');
+            content.className = 'task-content';
+
+            const dueText = formatDueDate(task.dueDate);
+
+            content.innerHTML = `
+                <div class="task-header">
+                    <span class="task-icon">${task.icon}</span>
+                    <span class="task-title">${task.title}</span>
+                </div>
+                <div class="task-meta">
+                    <span class="task-due">📅 ${dueText}</span>
+                    <span class="task-source">${task.source}</span>
+                    <a href="${task.deepLink}" class="task-link" target="_blank">Open →</a>
+                </div>
+            `;
+
+            item.appendChild(checkbox);
+            item.appendChild(content);
+
+            return item;
+        }
+
+        // Handle task completion
+        function handleTaskComplete(taskId, isChecked) {
+            if (isChecked) {
+                completedTasks.add(taskId);
+            } else {
+                completedTasks.delete(taskId);
+            }
+
+            loadTasks();
+        }
+
+        // Format due date
+        function formatDueDate(date) {
+            const now = new Date();
+            const diff = date - now;
+            const days = Math.floor(diff / 86400000);
+
+            if (days < 0) {
+                return `Overdue ${Math.abs(days)} day${Math.abs(days) !== 1 ? 's' : ''}`;
+            } else if (days === 0) {
+                return 'Due Today';
+            } else if (days === 1) {
+                return 'Due Tomorrow';
+            } else if (days <= 7) {
+                return `Due in ${days} days`;
+            } else {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+        }
+
+        // Update metrics
+        function updateMetrics(tasks) {
+            const now = new Date();
+            const activeTasks = tasks.filter(t => !completedTasks.has(t.id));
+
+            const overdue = activeTasks.filter(t => t.dueDate < now).length;
+            const today = activeTasks.filter(t => {
+                const diff = Math.floor((t.dueDate - now) / 86400000);
+                return diff === 0;
+            }).length;
+            const completed = completedTasks.size;
+            const total = activeTasks.length;
+
+            document.getElementById('overdueCount').textContent = overdue;
+            document.getElementById('todayCount').textContent = today;
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('totalBadge').textContent = total;
+        }
+    </script>
+</body>
+</html>
