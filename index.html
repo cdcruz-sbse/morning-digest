@@ -738,7 +738,7 @@
             divider.className = 'section-divider';
 
             const taskList = document.createElement('div');
-            taskList.className = 'task-list';
+            taskList.className = 'task-list collapsed'; // Start collapsed
 
             tasks.forEach(task => {
                 taskList.appendChild(createTaskItem(task, priority));
@@ -749,8 +749,10 @@
                 taskList.style.maxHeight = taskList.scrollHeight + 'px';
             }, 0);
 
-            // Collapse functionality
-            let isCollapsed = false;
+            // Collapse functionality - starts collapsed by default
+            let isCollapsed = true; // Changed to true
+            sectionHeader.classList.add('collapsed'); // Add collapsed class to header
+            
             sectionHeader.addEventListener('click', function(e) {
                 e.preventDefault();
                 isCollapsed = !isCollapsed;
